@@ -4,7 +4,23 @@ set -e
 echo "=== LibreChat HF Spaces Startup ==="
 
 # Create directories with proper permissions
-mkdir -p /app/logs /app/uploads /app/images 2>/dev/null || true
+mkdir -p /app/logs /app/uploads /app/images /data/db 2>/dev/null || true
+chown -R 1000:1000 /data/db 2>/dev/null || true
+
+# Start MongoDB in background
+echo "Starting embedded MongoDB..."
+mongod --dbpath /data/db --bind_ip 127.0.0.1 --port 27017 --fork --logpath /app/logs/mongodb.log --noauth
+
+# Wait for MongoDB to be ready
+echo "Waiting for MongoDB to start..."
+for i in 1 2 3 4 5 6 7 8 9 10; do
+    if mongosh --eval "db.adminCommand('ping')" --quiet 2>/dev/null; then
+        echo "MongoDB is ready!"
+        break
+    fi
+    echo "Waiting... ($i/10)"
+    sleep 2
+done
 
 # Generate random secrets if not provided
 if [ -z "$JWT_SECRET" ]; then
@@ -27,24 +43,18 @@ if [ -z "$CREDS_IV" ]; then
     echo "Generated CREDS_IV"
 fi
 
-# Check required environment variables
-if [ -z "$MONGO_URI" ]; then
-    echo "ERROR: MONGO_URI not set!"
-    echo "Please add your MongoDB Atlas connection string to HF Spaces secrets."
-    echo "Get a free MongoDB Atlas cluster at: https://www.mongodb.com/atlas/database"
-    echo ""
-    echo "Example: MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/LibreChat"
-    exit 1
-fi
+# Set MongoDB URI to embedded instance
+export MONGO_URI="mongodb://127.0.0.1:27017/LibreChat"
 
+# Check if HUGGINGFACE_TOKEN is set
 if [ -z "$HUGGINGFACE_TOKEN" ]; then
     echo "WARNING: HUGGINGFACE_TOKEN not set!"
     echo "Add it to HF Spaces secrets for the HF Inference API endpoints to work."
     echo "Get your token at: https://huggingface.co/settings/tokens"
 fi
 
-echo "MongoDB URI configured: $(echo $MONGO_URI | sed 's/:.*@/:***@/')"
+echo "MongoDB running on localhost:27017"
 echo "Starting LibreChat on port ${PORT:-7860}..."
 
-# Start the application
-exec npm run backend
+# Start the application as user 1000
+exec su-exec 1000:1000 npm run backend || exec npm run backend

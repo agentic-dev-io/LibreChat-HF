@@ -154,15 +154,9 @@ Click on the thumbnail to open the video☝️
 
 This fork is optimized for easy deployment on Hugging Face Spaces, perfect for the MCP Hackathon demo!
 
-### Prerequisites
+### ✨ Simple Setup - No External Database Required!
 
-1. **MongoDB Atlas Account** (free tier works!)
-   - Sign up at [mongodb.com/atlas](https://www.mongodb.com/atlas/database)
-   - Create a free cluster
-   - Get your connection string (looks like: `mongodb+srv://user:pass@cluster.mongodb.net/LibreChat`)
-
-2. **Hugging Face Account & Token**
-   - Get your API token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+MongoDB runs embedded in the container - just add your HuggingFace token and you're ready to go!
 
 ### Quick Start
 
@@ -170,6 +164,7 @@ This fork is optimized for easy deployment on Hugging Face Spaces, perfect for t
    - Go to [huggingface.co/spaces](https://huggingface.co/spaces) and click "Create new Space"
    - Select **Docker** as the SDK
    - Choose your Space name
+   - **Recommended:** Enable persistent storage in Space settings for data persistence
 
 2. **Clone and push this repository**
    ```bash
@@ -182,14 +177,11 @@ This fork is optimized for easy deployment on Hugging Face Spaces, perfect for t
    git push space main
    ```
 
-3. **Configure Secrets** (Required!)
+3. **Configure Secret** (Only 1 required!)
    In your Space Settings → Secrets, add:
-   - `MONGO_URI`: Your MongoDB Atlas connection string
-   - `HUGGINGFACE_TOKEN`: Your HF API token
+   - `HUGGINGFACE_TOKEN`: Your HF API token ([get it here](https://huggingface.co/settings/tokens))
    
-   Optional secrets (auto-generated if not set):
-   - `JWT_SECRET`: Random 32+ character string
-   - `JWT_REFRESH_SECRET`: Random 32+ character string
+   That's it! All other secrets are auto-generated.
 
 4. **Access your Space**
    Once built, your LibreChat instance will be available at:
@@ -207,10 +199,10 @@ This setup includes these models via the free HF Inference API:
 
 | File | Description |
 |------|-------------|
-| `Dockerfile.hf` | Optimized Dockerfile for HF Spaces |
+| `Dockerfile.hf` | Optimized Dockerfile with embedded MongoDB |
 | `config/hf/librechat.hf.yaml` | Pre-configured with HF Inference API endpoints |
 | `config/hf/env.hf` | Environment template for HF Spaces |
-| `config/hf/start-hf.sh` | Startup script with auto-generated secrets |
+| `config/hf/start-hf.sh` | Startup script with MongoDB & auto-generated secrets |
 
 ---
 
